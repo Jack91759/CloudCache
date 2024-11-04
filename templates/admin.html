@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin Panel</h2>
+
+<h3>Add Subscription</h3>
+<form action="{{ url_for('admin') }}" method="POST">
+    <input type="hidden" name="action" value="add_subscription">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="number" name="extra_storage" placeholder="Extra Storage (in bytes)" required>
+    <button type="submit">Add Subscription</button>
+</form>
+
+<h3>Revoke Subscription</h3>
+<form action="{{ url_for('admin') }}" method="POST">
+    <input type="hidden" name="action" value="revoke_subscription">
+    <input type="text" name="username" placeholder="Username" required>
+    <button type="submit">Revoke Subscription</button>
+</form>
+{% endblock %}

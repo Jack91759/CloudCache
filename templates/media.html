@@ -1,0 +1,11 @@
+{% if filename.endswith('.mp3') %}
+<audio controls>
+    <source src="{{ url_for('media_file', filename=filename) }}" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+{% elif filename.endswith('.mp4') %}
+<video controls width="600">
+    <source src="{{ url_for('media_file', filename=filename) }}" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
+{% endif %}

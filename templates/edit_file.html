@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit File</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/mode/python/python.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background-color: #282c34; /* Dark background */
+            color: #ffffff; /* Light text color */
+        }
+        #editor-container {
+            height: 100vh; /* Full height */
+            padding: 20px;
+        }
+        .CodeMirror {
+            height: 100%;
+            border: 1px solid #ddd;
+        }
+        button {
+            margin: 10px 0;
+        }
+        #fontSelector {
+            margin-right: 10px;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #444;
+            border: 1px solid #ddd;
+            color: #ffffff;
+            white-space: pre-wrap; /* Preserve formatting */
+        }
+    </style>
+    <script>
+        var editor;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // Load the saved font from localStorage if available
+            const savedFont = localStorage.getItem('selectedFont') || 'Arial';
+            editor = CodeMirror.fromTextArea(document.getElementById("file_content"), {
+                lineNumbers: true,
+                mode: "python", // Default mode; can change based on the file type
+                theme: "dracula", // Cool theme
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                highlightSelectionMatches: true,
+                extraKeys: {
+                    "Ctrl-S": function(cm) {
+                        cm.save(); // Allow Ctrl+S to save
+                    },
+                    "Ctrl-Z": function(cm) {
+                        cm.undo(); // Allow Ctrl+Z to undo
+                    },
+                    "Ctrl-Y": function(cm) {
+                        cm.redo(); // Allow Ctrl+Y to redo
+                    },
+                },
+            });
+
+            // Set the font family
+            editor.getWrapperElement().style.fontFamily = savedFont;
+
+            // Font selector change event
+            document.getElementById('fontSelector').addEventListener('change', function() {
+                const selectedFont = this.value;
+                editor.getWrapperElement().style.fontFamily = selectedFont;
+                // Save the selected font to localStorage
+                localStorage.setItem('selectedFont', selectedFont);
+            });
+        });
+
+        // Functions to apply formatting
+        function applyFormat(format) {
+            const selectedText = editor.getSelection();
+            if (selectedText) {
+                let formattedText;
+                switch(format) {
+                    case 'bold':
+                        formattedText = `**${selectedText}**`; // Markdown style bold
+                        break;
+                    case 'underline':
+                        formattedText = `__${selectedText}__`; // Markdown style underline
+                        break;
+                    case 'highlight':
+                        formattedText = `==${selectedText}==`; // Markdown style highlight
+                        break;
+                }
+                editor.replaceSelection(formattedText);
+            }
+        }
+
+        // Function to run Python code
+        async function runPythonCode() {
+            const code = editor.getValue();
+            const response = await fetch("/run_python", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ code: code })
+            });
+            const result = await response.json();
+            document.getElementById("output").textContent = result.output;
+        }
+    </script>
+</head>
+<body>
+    <div id="editor-container">
+        <h3>Editing {{ filename }}</h3>
+        <select id="fontSelector">
+            <option value="Arial">Arial</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Verdana">Verdana</option>
+        </select>
+        <button type="button" onclick="applyFormat('bold')">Bold</button>
+        <button type="button" onclick="applyFormat('underline')">Underline</button>
+        <button type="button" onclick="applyFormat('highlight')">Highlight</button>
+        <form action="{{ url_for('edit_file', filename=filename) }}" method="POST">
+            <textarea id="file_content" name="file_content" rows="20" cols="80">{{ file_content }}</textarea>
+            <br>
+            <button type="submit">Save</button>
+        </form>
+        <div id="output"></div> <!-- Output display -->
+    </div>
+</body>
+</html>

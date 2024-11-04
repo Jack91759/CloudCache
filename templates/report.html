@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issue Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Issue Tracker</h1>
+        <form id="issueForm" action="{{ url_for('submit') }}" method="post">
+            <label for="issueDescription">Describe the issue or feature request:</label>
+            <textarea id="issueDescription" name="issueDescription" required></textarea>
+            <button type="submit">Submit</button>
+        </form>
+
+        <h2>Reported Issues</h2>
+        <div id="issuesList">
+            {% for issue in issues %}
+            <div class="issue-item">
+                <p>{{ issue }}</p>
+                {% if ' (Done)' not in issue %}
+                <form action="{{ url_for('mark_done', issue_index=loop.index0) }}" method="post" style="display:inline;">
+                    <button class="mark-done">Mark as Done</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='report.js') }}"></script>
+</body>
+</html>
